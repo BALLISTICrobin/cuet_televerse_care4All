@@ -187,11 +187,11 @@ All traffic goes through the API Gateway (port 8080):
 -----
 
 Made by
-**Team API Avengers**
+**Team Desi Avengers**
 
 CareForAll Microservice Hackathon — November 21, 2025
 
-Department of ETE, CUET
+Department of CSE, BUET
 
 ```
 ```
