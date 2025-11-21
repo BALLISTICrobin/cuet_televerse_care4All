@@ -1,5 +1,10 @@
 services:
-  # 1. Database for Services (PostgreSQL)
+
+  # --------------------------------------------------------
+  # CORE INFRASTRUCTURE
+  # --------------------------------------------------------
+
+  # 1. PostgreSQL (Shared DB)
   postgres:
     image: postgres:15
     container_name: careforall_db
@@ -12,23 +17,100 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  # 2. Redis (For Idempotency & Caching)
+  # 2. Redis (Idempotency + Caching)
   redis:
     image: redis:7
     container_name: careforall_redis
     ports:
       - "6379:6379"
 
-  # 3. RabbitMQ (For Event Driven Architecture)
+  # 3. RabbitMQ (Message Broker)
   rabbitmq:
     image: rabbitmq:3-management
     container_name: careforall_broker
-    ports:
-      - "5672:5672"   # App connection
-      - "15672:15672" # UI Dashboard
     environment:
       RABBITMQ_DEFAULT_USER: user
       RABBITMQ_DEFAULT_PASS: password
+    ports:
+      - "5672:5672"
+      - "15672:15672" # Management UI
 
+  # --------------------------------------------------------
+  # OBSERVABILITY STACK
+  # --------------------------------------------------------
+
+  # 4. Zipkin (Distributed Tracing)
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: careforall_zipkin
+    environment:
+      STORAGE_TYPE: mem
+    ports:
+      - "9411:9411"
+
+  # 5. Prometheus (Metrics Collector)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: careforall_prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - zipkin
+
+  # 6. Grafana (Metrics Dashboard)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: careforall_grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+
+  # --------------------------------------------------------
+  # LOGGING STACK (ELK)
+  # --------------------------------------------------------
+
+  # 7. Elasticsearch (Searchable Log Storage)
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.10
+    container_name: careforall_elastic
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+
+  # 8. Logstash (Ingest → Transform → Forward logs)
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.17.10
+    container_name: careforall_logstash
+    command: >
+      logstash -e
+      'input { tcp { port => 5000 codec => json_lines } }
+       output { elasticsearch { hosts => ["elasticsearch:9200"]
+       index => "microservices-logs-%{+YYYY.MM.dd}" } }'
+    ports:
+      - "5001:5000"
+    depends_on:
+      - elasticsearch
+
+  # 9. Kibana (Log Visualization)
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.17.10
+    container_name: careforall_kibana
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+
+# --------------------------------------------------------
+# VOLUMES
+# --------------------------------------------------------
 volumes:
   postgres_data:

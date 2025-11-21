@@ -21,5 +21,18 @@ spring:
   rabbitmq:
     host: localhost
     port: 5672
-    username: user       # <-- ADD THIS
-    password: password   # <-- ADD THIS
+    username: user
+    password: password
+
+# --- OBSERVABILITY (Checkpoint 3) ---
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus, metrics
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans

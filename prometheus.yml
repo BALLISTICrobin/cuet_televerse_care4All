@@ -1,0 +1,25 @@
+global:
+  scrape_interval: 2s   # Fast scraping for your hackathon demo!
+
+scrape_configs:
+
+  # ---------------------------------------------------------
+  # Scrape Spring Boot Microservices running in IntelliJ
+  # ---------------------------------------------------------
+  - job_name: 'careforall_microservices'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets:
+          - 'host.docker.internal:8080' # Gateway
+          - 'host.docker.internal:8081' # Donation Service
+          - 'host.docker.internal:8082' # Campaign Service
+          - 'host.docker.internal:8083' # Payment Service
+          - 'host.docker.internal:8084' # Auth Service
+
+  # ---------------------------------------------------------
+  # Scrape Prometheus itself (good for debugging)
+  # ---------------------------------------------------------
+  - job_name: 'prometheus'
+    static_configs:
+      - targets:
+          - 'localhost:9090'

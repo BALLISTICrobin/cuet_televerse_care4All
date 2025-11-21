@@ -18,16 +18,19 @@ spring:
           uri: http://localhost:8082
           predicates:
             - Path=/api/campaigns/**
+
         # Route 3: Payment Service (Webhooks)
         - id: payment-service
           uri: http://localhost:8083
           predicates:
             - Path=/api/payments/**
+
         # Route 4: Auth Service
         - id: auth-service
           uri: http://localhost:8084
           predicates:
             - Path=/auth/**
+
       # CORS Configuration (Crucial for Frontend)
       globalcors:
         cors-configurations:
@@ -39,3 +42,16 @@ spring:
               - PUT
               - DELETE
             allowedHeaders: "*"
+
+# --- OBSERVABILITY (Checkpoint 3) ---
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus, metrics
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
