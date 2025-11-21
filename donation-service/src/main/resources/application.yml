@@ -1,0 +1,31 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: donation-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5433/careforall_db   # <-- FIXED (5432 ? 5433)
+    username: user                                        # must match POSTGRES_USER
+    password: password                                    # must match POSTGRES_PASSWORD
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect   # optional but recommended
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: user                                         # MUST ADD
+    password: password                                     # MUST ADD
