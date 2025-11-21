@@ -83,9 +83,7 @@ jobs:
           docker build -t $IMAGE_NAME:$VERSION .
           docker tag $IMAGE_NAME:$VERSION $IMAGE_NAME:latest
 
-          # Optional:
-          # docker push $IMAGE_NAME:$VERSION
-          # docker push $IMAGE_NAME:latest
+
 
   # ====================================================
   # JOB 2: END-TO-END DOCKER COMPOSE DEPLOYMENT
@@ -98,22 +96,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Start infra with docker compose
       - name: Start Infrastructure with Docker Compose
         run: docker compose up -d
 
+      # Allow services to fully boot
       - name: Wait for Services to Boot
         run: sleep 30
 
+      # Display running containers
       - name: Verify Running Containers
-        run: docker ps -a
+        run: docker compose ps
 
+      # Final health check: verify that api-gateway service is UP
       - name: Health Check (Gateway)
         run: |
-          echo "Checking if gateway container exists..."
-          if docker ps | grep "api-gateway"; then
+          echo "Checking if Gateway service is running..."
+          if docker compose ps | grep "api-gateway"; then
             echo "Gateway is running!"
           else
             echo "Gateway failed to start!"
-            docker-compose logs
+            docker compose logs
             exit 1
           fi
